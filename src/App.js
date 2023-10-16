@@ -1,33 +1,51 @@
-import "./App.css"
-import Expenses from "./components/Expenses/Expenses"
+import { useEffect, useState } from "react"
+import Header from "./components/Header/Header"
+import ResultsTable from "./components/ResultsTable/ResultsTable"
+import UserInput from "./components/UserInput/UserInput"
 
 function App() {
-  const expenses = [
-    {
-      id: "e1",
-      title: "Toilet Paper",
-      amount: 94.12,
-      date: new Date(2020, 7, 14),
-    },
-    { id: "e2", title: "New TV", amount: 799.49, date: new Date(2021, 2, 12) },
-    {
-      id: "e3",
-      title: "Car Insurance",
-      amount: 294.67,
-      date: new Date(2021, 2, 28),
-    },
-    {
-      id: "e4",
-      title: "New Desk (Wooden)",
-      amount: 450,
-      date: new Date(2021, 5, 12),
-    },
-  ]
+  const [userInput, setUserInput] = useState()
+  const [results, setResults] = useState()
+
+  const calculateHandler = (userInput) => {
+    setUserInput(userInput)
+  }
+
+  useEffect(() => {
+    if (userInput) {
+      const yearlyData = [] // per-year results
+
+      let currentSavings = +userInput["current-savings"]
+      const yearlyContribution = +userInput["yearly-contribution"]
+      const expectedReturn = +userInput["expected-return"] / 100
+      const duration = +userInput["duration"]
+
+      for (let i = 0; i < duration; i++) {
+        const yearlyInterest = currentSavings * expectedReturn
+        currentSavings += yearlyInterest + yearlyContribution
+        yearlyData.push({
+          year: i + 1,
+          yearlyInterest: yearlyInterest,
+          savingsEndOfYear: currentSavings,
+          yearlyContribution: yearlyContribution,
+        })
+      }
+
+      setResults(yearlyData)
+    }
+  }, [userInput])
 
   return (
     <div>
-      <h2>Let`s get started!</h2>
-      <Expenses items={expenses}/>
+      <Header />
+      <UserInput onCalculate={calculateHandler} />
+      {!userInput && <p style={{textAlign: 'center'}}>No investments calculated yet.</p>}
+      {userInput && (
+        <ResultsTable
+          results={results}
+          initialInvestment={userInput["current-savings"]}
+        />
+      )}
     </div>
   )
 }
